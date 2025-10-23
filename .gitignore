@@ -213,3 +213,17 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+
+#############
+## Node
+#############
+
+node_modules/
+npm-debug.log
+package-lock.json
+
+#############
+## Build Output
+#############
+
+public/

@@ -4,12 +4,16 @@ const { marked } = require('marked');
 
 // Directories
 const contentDir = './content';
+const postsDir = './content/posts';
 const publicDir = './public';
 const templatePath = './template.html';
 
-// Ensure public directory exists
+// Ensure directories exist
 if (!fs.existsSync(publicDir)) {
     fs.mkdirSync(publicDir, { recursive: true });
+}
+if (!fs.existsSync(postsDir)) {
+    fs.mkdirSync(postsDir, { recursive: true });
 }
 
 // Read template
@@ -33,7 +37,7 @@ function render(template, data) {
     return result;
 }
 
-// Get all markdown files
+// Get all markdown files (non-recursive, for pages)
 function getMarkdownFiles(dir) {
     if (!fs.existsSync(dir)) {
         console.log(`Content directory '${dir}' not found. Creating with default files...`);
@@ -41,7 +45,57 @@ function getMarkdownFiles(dir) {
     }
 
     const files = fs.readdirSync(dir);
-    return files.filter(file => file.endsWith('.md'));
+    return files.filter(file => file.endsWith('.md') && fs.statSync(path.join(dir, file)).isFile());
+}
+
+// Get all posts with metadata
+function getAllPosts() {
+    if (!fs.existsSync(postsDir)) {
+        return [];
+    }
+
+    const files = fs.readdirSync(postsDir).filter(file => file.endsWith('.md'));
+    const posts = [];
+
+    files.forEach(file => {
+        const filePath = path.join(postsDir, file);
+        const fileContent = fs.readFileSync(filePath, 'utf-8');
+        const { frontMatter, content } = parseFrontMatter(fileContent);
+        const stats = fs.statSync(filePath);
+
+        posts.push({
+            filename: file,
+            slug: file.replace('.md', ''),
+            title: frontMatter.title || file.replace('.md', ''),
+            date: frontMatter.date || stats.mtime.toISOString().split('T')[0],
+            description: frontMatter.description || '',
+            frontMatter,
+            content
+        });
+    });
+
+    // Sort by date, newest first
+    posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+    return posts;
+}
+
+// Generate post list HTML
+function generatePostList(posts) {
+    if (posts.length === 0) {
+        return '<p>No posts yet. Add markdown files to <code>content/posts/</code> to get started!</p>';
+    }
+
+    let html = '<div class="post-list">';
+    posts.forEach(post => {
+        html += `
+        <article class="post-preview">
+            <h3><a href="posts/${post.slug}.html">${post.title}</a></h3>
+            <time class="post-date">${post.date}</time>
+            ${post.description ? `<p>${post.description}</p>` : ''}
+        </article>`;
+    });
+    html += '</div>';
+    return html;
 }
 
 // Parse front matter from markdown
@@ -77,18 +131,52 @@ function parseFrontMatter(content) {
 function build() {
     console.log('Building site...');
 
-    const mdFiles = getMarkdownFiles(contentDir);
+    let totalPages = 0;
 
-    if (mdFiles.length === 0) {
-        console.log('No markdown files found. Site will be empty.');
+    // Get all posts first
+    const posts = getAllPosts();
+    console.log(`Found ${posts.length} posts`);
+
+    // Create posts directory in public
+    const publicPostsDir = path.join(publicDir, 'posts');
+    if (!fs.existsSync(publicPostsDir)) {
+        fs.mkdirSync(publicPostsDir, { recursive: true });
     }
+
+    // Build individual post pages
+    posts.forEach(post => {
+        const htmlContent = marked(post.content);
+        const outputPath = path.join(publicPostsDir, `${post.slug}.html`);
+
+        const pageData = {
+            title: post.title,
+            subtitle: post.date,
+            description: post.description,
+            content: htmlContent,
+            year: new Date().getFullYear()
+        };
+
+        const html = render(template, pageData);
+        fs.writeFileSync(outputPath, html);
+        console.log(`✓ Built posts/${post.slug}.html`);
+        totalPages++;
+    });
+
+    // Build regular pages from content/
+    const mdFiles = getMarkdownFiles(contentDir);
 
     mdFiles.forEach(file => {
         const filePath = path.join(contentDir, file);
         const fileContent = fs.readFileSync(filePath, 'utf-8');
 
         const { frontMatter, content } = parseFrontMatter(fileContent);
-        const htmlContent = marked(content);
+
+        // Special handling for index page - inject post list
+        let htmlContent = marked(content);
+        if (file === 'index.md') {
+            const postListHtml = generatePostList(posts);
+            htmlContent += '\n<h2>Recent Posts</h2>\n' + postListHtml;
+        }
 
         const outputFileName = file.replace('.md', '.html');
         const outputPath = path.join(publicDir, outputFileName);
@@ -105,9 +193,10 @@ function build() {
         fs.writeFileSync(outputPath, html);
 
         console.log(`✓ Built ${outputFileName}`);
+        totalPages++;
     });
 
-    console.log(`\nBuild complete! ${mdFiles.length} pages generated in ${publicDir}/`);
+    console.log(`\n✨ Build complete! ${totalPages} pages generated (${posts.length} posts, ${mdFiles.length} pages)`);
 }
 
 build();

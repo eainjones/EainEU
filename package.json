@@ -1,0 +1,13 @@
+{
+  "name": "eain-eu",
+  "version": "1.0.0",
+  "description": "Minimal personal website",
+  "scripts": {
+    "build": "node build.js",
+    "dev": "node build.js && python3 -m http.server 8000 --directory public"
+  },
+  "dependencies": {
+    "marked": "^11.0.0"
+  },
+  "devDependencies": {}
+}

@@ -6,19 +6,23 @@ A minimal, fast-loading personal website inspired by Anthropic's design guidelin
 
 - **Minimal & Fast** - Clean design with minimal dependencies
 - **Markdown-Based** - Write content in simple markdown files
+- **Blog Ready** - Automatic post listing and individual post pages
 - **Auto-Deploy** - Push to GitHub and your site updates automatically
 - **Anthropic-Inspired** - Warm color palette, generous spacing, clean typography
 - **GitHub Pages** - Free, fast, and reliable hosting
+- **Obsidian-Friendly** - Works perfectly with Obsidian or any markdown editor
 
 ## Project Structure
 
 ```
 .
-├── content/           # Your markdown content files
+├── content/           # Your markdown content
+│   ├── posts/        # Blog posts (auto-listed on home page)
 │   ├── index.md      # Home page
 │   └── about.md      # About page
 ├── public/            # Generated site (auto-created)
-├── template.html      # HTML template
+│   └── posts/        # Generated post pages
+├── template.html      # HTML template with styles
 ├── build.js           # Build script
 └── package.json       # Dependencies
 ```
@@ -49,19 +53,63 @@ A minimal, fast-loading personal website inspired by Anthropic's design guidelin
 
 ### Adding Content
 
-1. Create or edit markdown files in the `content/` directory
-2. Add front matter at the top of each file:
+#### Writing Blog Posts
+
+1. Create a new markdown file in `content/posts/`
+2. Add front matter at the top:
    ```markdown
    ---
-   title: Your Page Title
-   subtitle: Optional subtitle
-   description: Page description for SEO
+   title: Your Post Title
+   date: 2025-10-23
+   description: Short description for preview
    ---
 
-   Your content here...
+   Your post content here...
    ```
-3. Commit and push to GitHub
-4. Your site will automatically rebuild and deploy!
+3. Commit and push:
+   ```bash
+   git add .
+   git commit -m "New post: Your Post Title"
+   git push
+   ```
+4. Done! Your site automatically rebuilds and deploys
+
+Posts are automatically:
+- Listed on the home page (newest first)
+- Generated as individual pages at `/posts/your-post-name.html`
+- Sorted by date
+
+#### Creating Static Pages
+
+For pages like "About" or other static content:
+1. Create markdown files directly in `content/` (not in `posts/`)
+2. Add front matter:
+   ```markdown
+   ---
+   title: Page Title
+   subtitle: Optional
+   description: Page description
+   ---
+
+   Content...
+   ```
+3. Update navigation in `template.html` if needed
+
+### Obsidian Workflow
+
+This site works perfectly with [Obsidian](https://obsidian.md):
+
+1. **Open your repo as a vault**: File → Open folder as vault → select your repository
+2. **Write posts**: Navigate to `content/posts/` and create new markdown files
+3. **Optional - Install Obsidian Git plugin**:
+   - Settings → Community plugins → Browse → "Obsidian Git"
+   - Configure auto-commit and push
+   - Now you can publish directly from Obsidian!
+
+**Simple workflow:**
+- Write in Obsidian
+- Save (auto-commits with plugin)
+- Site deploys automatically via GitHub Actions
 
 ## Deployment
 

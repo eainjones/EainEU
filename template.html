@@ -164,6 +164,46 @@
             animation: fadeIn 0.5s ease-in;
         }
 
+        /* Post list styles */
+        .post-list {
+            margin: 2rem 0;
+        }
+
+        .post-preview {
+            padding: 1.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .post-preview:last-child {
+            border-bottom: none;
+        }
+
+        .post-preview h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.35rem;
+        }
+
+        .post-preview h3 a {
+            color: var(--text);
+            border-bottom: none;
+        }
+
+        .post-preview h3 a:hover {
+            color: var(--primary);
+        }
+
+        .post-date {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .post-preview p {
+            margin: 0.5rem 0 0 0;
+            color: var(--text-secondary);
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
